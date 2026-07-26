@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de Fundamentales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #17181a;
+    --panel: #1f2123;
+    --panel-hi: #26282b;
+    --hair: rgba(237,231,218,0.10);
+    --ivory: #ede7da;
+    --muted: #948d7f;
+    --brass: #c9a24b;
+    --brass-dim: rgba(201,162,75,0.35);
+    --teal: #5c8b83;
+    --radius-node: 999px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--ink);
+    color: var(--ivory);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height:100vh;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  a{ color: var(--brass); }
+
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding: 64px 24px 40px;
+    text-align:center;
+    border-bottom: 1px solid var(--hair);
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(201,162,75,0.08), transparent 70%),
+      var(--ink);
+  }
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--teal);
+    margin-bottom: 18px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  .sub{
+    font-size: 15.5px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto 48px;
+    line-height: 1.6;
+  }
+
+  /* ---------- WHEEL ---------- */
+  .wheel-outer{
+    position: relative;
+    width: min(340px, 78vw);
+    aspect-ratio: 1/1;
+    margin: 0 auto;
+  }
+  .wheel-ring{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border: 1px solid var(--hair);
+  }
+  .wheel-ring::before{
+    content:'';
+    position:absolute; inset: 14%;
+    border-radius:50%;
+    border: 1px dashed var(--hair);
+  }
+  .wheel-center{
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    text-align:center;
+    pointer-events:none;
+  }
+  .wheel-center .note{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(2.6rem, 8vw, 3.4rem);
+    color: var(--brass);
+    line-height:1;
+    display:block;
+  }
+  .wheel-center .label{
+    font-family:'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color: var(--muted);
+    display:block;
+    margin-top: 6px;
+  }
+  .node{
+    position:absolute;
+    width: 44px; height:44px;
+    top:50%; left:50%;
+    margin: -22px 0 0 -22px;
+    border-radius: var(--radius-node);
+    border: 1px solid var(--hair);
+    background: var(--panel);
+    color: var(--ivory);
+    font-family:'Space Mono', monospace;
+    font-size: 14px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+  }
+  .node:hover{ border-color: var(--brass-dim); transform: scale(1.08); }
+  .node:focus-visible{ outline: 2px solid var(--brass); outline-offset: 2px; }
+  .node[aria-pressed="true"]{
+    background: var(--brass);
+    color: var(--ink);
+    border-color: var(--brass);
+    font-weight: 700;
+    transform: scale(1.12);
+  }
+
+  /* ---------- RESULTS ---------- */
+  .results{ padding-top: 44px; }
+  .results-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .results-head h2{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin: 0;
+  }
+  .results-head .count{
+    font-family:'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .row{
+    display:grid;
+    grid-template-columns: 108px 92px 1fr;
+    gap: 18px;
+    align-items:start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--hair);
+  }
+  .row:first-child{ border-top: 1px solid var(--hair); }
+
+  .fn{
+    display:flex; flex-direction:column; gap:3px;
+  }
+  .fn .tag{
+    font-family:'Space Mono', monospace;
+    font-size: 14px;
+    font-weight:700;
+    color: var(--brass);
+  }
+  .fn .name{
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height:1.3;
+  }
+
+  .semis{
+    font-family:'Space Mono', monospace;
+    font-size: 12.5px;
+    color: var(--teal);
+    padding-top: 2px;
+  }
+  .semis .num{ font-size:16px; color:var(--ivory); }
+  .semis .u{ color: var(--muted); }
+
+  .root-line{
+    font-family:'Fraunces', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--ivory);
+    margin: 0 0 10px;
+  }
+  .root-line b{ color: var(--brass); font-style:normal; }
+
+  .chips{
+    display:flex; flex-wrap:wrap; gap:7px;
+  }
+  .chip{
+    font-family:'Space Mono', monospace;
+    font-size: 12.5px;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    color: var(--ivory);
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px){
+    .row{ grid-template-columns: 1fr; gap:8px; }
+    .fn{ flex-direction:row; align-items:baseline; gap:10px; }
+    .semis{ padding-top:0; }
+  }
+
+  /* ---------- FOOTER / LEGEND ---------- */
+  .legend{
+    margin-top: 56px;
+    padding-top: 28px;
+    border-top: 1px solid var(--hair);
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .legend p{ margin: 0 0 10px; }
+  .legend b{ color: var(--ivory); font-weight:600; }
+</style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="eyebrow">Teoría armónica · función interválica</div>
+    <h1>Buscador de<br>Fundamentales</h1>
+    <p class="sub">Elegí una nota en la rueda cromática y la tabla arma automáticamente los acordes posibles según la función que esa nota cumple en cada uno.</p>
+
+    <div class="wheel-outer" id="wheel">
+      <div class="wheel-ring"></div>
+      <div class="wheel-center">
+        <span class="note" id="centerNote">F</span>
+        <span class="label">nota elegida</span>
+      </div>
+      <!-- nodes injected by JS -->
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="results">
+      <div class="results-head">
+        <h2>Acordes posibles</h2>
+        <span class="count" id="resultCount"></span>
+      </div>
+      <div id="rows"></div>
+    </section>
+
+    <div class="legend">
+      <p><b>Convención de notas usada:</b> C, Db, D, Eb, E, F, F#, G, Ab, A, Bb, B — una sola grafía fija por nota, no cambia según el tipo de acorde.</p>
+      <p><b>Símbolos:</b> Δ7/Δ9/Δ11/Δ13 = mayor · ø7/ø9/ø11/ø13 = semidisminuido (m7b5) · ° = disminuido · °7 = disminuido7 · + = aumentado.</p>
+      <p>Las funciones <b>Fundamental</b>, <b>5J</b> y <b>7m</b> no repiten las variantes alteradas de dominante (b9, #9, #11, b13): esas tensiones tienen su propia fila (9m, 9a, 11a, 13m) porque ahí es donde son la nota buscada.</p>
+    </div>
+  </div>
+
+<script>
+  const NOTES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+
+  // semitones = distancia desde la fundamental del acorde hasta la nota elegida
+  const FUNCTIONS = [
+    { tag:"Fundamental", name:"Unísono",            semis:0,  suf:["","m","°","+","5","sus2","sus4","6","m6","6/9","m6/9","Δ7","7","m7","mΔ7","ø7","°7","Δ7(#5)","7(#5)","7sus4","m(add9)","Δ9","9","m9","mΔ9","ø9","11","m11","13","Δ13","m13"] },
+    { tag:"3m",          name:"Tercera menor",        semis:3,  suf:["m","°","m6","m6/9","mΔ7","m7","ø7","°7","m9","mΔ9","ø9","m11","mΔ11","ø11","m13","mΔ13","m(add9)"] },
+    { tag:"3M",          name:"Tercera mayor",        semis:4,  suf:["","+","6","6/9","Δ7","7","Δ7(#5)","7(#5)","Δ9","9","13","Δ13","add9"] },
+    { tag:"4J",          name:"Cuarta justa",         semis:5,  suf:["sus4","7sus4","9sus4","13sus4"] },
+    { tag:"5d",          name:"Quinta disminuida",    semis:6,  suf:["°","ø7","°7","7(b5)","ø9"] },
+    { tag:"5J",          name:"Quinta justa",         semis:7,  suf:["","m","5","sus2","sus4","6","m6","6/9","m6/9","Δ7","7","m7","mΔ7","Δ9","9","m9","mΔ9","11","m11","13","Δ13","m13","add9","m(add9)","7sus4","9sus4","13sus4"] },
+    { tag:"5a",          name:"Quinta aumentada",     semis:8,  suf:["+","Δ7(#5)","7(#5)","9(#5)"] },
+    { tag:"6M",          name:"Sexta mayor",          semis:9,  suf:["6","m6","6/9","m6/9"] },
+    { tag:"7d",          name:"Séptima disminuida",   semis:9,  suf:["°7"] },
+    { tag:"7m",          name:"Séptima menor",        semis:10, suf:["7","m7","ø7","9","m9","ø9","11","m11","ø11","13","m13","7sus4","9sus4","13sus4"] },
+    { tag:"7M",          name:"Séptima mayor",        semis:11, suf:["Δ7","mΔ7","Δ9","mΔ9","Δ7(#11)","Δ7(#5)","Δ13"] },
+    { tag:"9m",          name:"Novena menor",         semis:1,  suf:["7(b9)","7(b9,#5)","7(b9,b13)","13(b9)","m7(b9)"] },
+    { tag:"9M",          name:"Novena mayor",         semis:2,  suf:["9","Δ9","m9","mΔ9","ø9","add9","m(add9)","6/9","m6/9"] },
+    { tag:"9a",          name:"Novena aumentada",     semis:3,  suf:["7(#9)","7(#9,#5)","7(#9,b13)","7(#9,#11)","13(#9)"] },
+    { tag:"11J",         name:"Oncena justa",         semis:5,  suf:["11","m11","mΔ11","ø11","m(add11)"] },
+    { tag:"11a",         name:"Oncena aumentada",     semis:6,  suf:["Δ7(#11)","7(#11)","Δ9(#11)","9(#11)","Δ13(#11)","13(#11)"] },
+    { tag:"13m",         name:"Trecena menor",        semis:8,  suf:["7(b13)","7(b9,b13)","7(#9,b13)","9(b13)"] },
+    { tag:"13M",         name:"Trecena mayor",        semis:9,  suf:["13","Δ13","m13","mΔ13","ø13"] },
+  ];
+
+  let selected = 5; // F, como en la hoja original
+
+  const wheel = document.getElementById('wheel');
+  const centerNote = document.getElementById('centerNote');
+  const rowsEl = document.getElementById('rows');
+  const countEl = document.getElementById('resultCount');
+
+  // construir la rueda
+  NOTES.forEach((note, i) => {
+    const angle = (i * 30) - 90; // 12 posiciones, empieza arriba
+    const rad = angle * Math.PI / 180;
+    const radius = 42; // % del contenedor
+    const x = 50 + radius * Math.cos(rad);
+    const y = 50 + radius * Math.sin(rad);
+
+    const btn = document.createElement('button');
+    btn.className = 'node';
+    btn.textContent = note;
+    btn.style.left = x + '%';
+    btn.style.top = y + '%';
+    btn.setAttribute('aria-pressed', i === selected ? 'true' : 'false');
+    btn.setAttribute('aria-label', 'Elegir nota ' + note);
+    btn.dataset.index = i;
+    btn.addEventListener('click', () => selectNote(i));
+    wheel.appendChild(btn);
+  });
+
+  function selectNote(i){
+    selected = i;
+    document.querySelectorAll('.node').forEach(n => {
+      n.setAttribute('aria-pressed', Number(n.dataset.index) === i ? 'true' : 'false');
+    });
+    centerNote.textContent = NOTES[i];
+    render();
+  }
+
+  function render(){
+    rowsEl.innerHTML = '';
+    let totalChords = 0;
+
+    FUNCTIONS.forEach(fn => {
+      const rootIdx = ((selected - fn.semis) % 12 + 12) % 12;
+      const rootNote = NOTES[rootIdx];
+      const chords = fn.suf.map(s => rootNote + s);
+      totalChords += chords.length;
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <div class="fn">
+          <span class="tag">${fn.tag}</span>
+          <span class="name">${fn.name}</span>
+        </div>
+        <div class="semis"><span class="num">${fn.semis}</span> <span class="u">semitonos</span></div>
+        <div>
+          <p class="root-line">Fundamental de esos acordes: <b>${rootNote}</b></p>
+          <div class="chips">${chords.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+        </div>
+      `;
+      rowsEl.appendChild(row);
+    });
+
+    countEl.textContent = totalChords + ' acordes en ' + FUNCTIONS.length + ' funciones';
+  }
+
+  render();
+</script>
+</body>
+</html>
