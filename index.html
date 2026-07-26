@@ -27,6 +27,7 @@
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     min-height:100vh;
+    overflow-x: hidden;
   }
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
@@ -34,11 +35,11 @@
 
   a{ color: var(--brass); }
 
-  .wrap{ max-width: 980px; margin: 0 auto; padding: 0 24px 80px; }
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 0 20px 60px; }
 
   /* ---------- HERO ---------- */
   .hero{
-    padding: 64px 24px 40px;
+    padding: 44px 20px 32px;
     text-align:center;
     border-bottom: 1px solid var(--hair);
     background:
@@ -56,24 +57,71 @@
   h1{
     font-family:'Fraunces', serif;
     font-weight: 600;
-    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-size: clamp(1.9rem, 9vw, 3.4rem);
     margin: 0 0 14px;
     letter-spacing: -0.01em;
   }
   .sub{
-    font-size: 15.5px;
+    font-size: clamp(13.5px, 3.6vw, 15.5px);
     color: var(--muted);
     max-width: 560px;
-    margin: 0 auto 48px;
+    margin: 0 auto 28px;
     line-height: 1.6;
+    padding: 0 4px;
   }
+
+  /* ---------- NOTATION SWITCH ---------- */
+  .notation-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .notation-toggle .opt{
+    font-family:'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    transition: color .18s ease;
+    cursor: pointer;
+    user-select: none;
+  }
+  .notation-toggle .opt.active{ color: var(--ivory); }
+  .switch{
+    position: relative;
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    flex-shrink: 0;
+  }
+  .switch .knob{
+    position:absolute;
+    top: 2px; left: 2px;
+    width: 20px; height: 20px;
+    border-radius:50%;
+    background: var(--brass);
+    transition: transform .2s ease;
+  }
+  .switch[aria-checked="true"] .knob{
+    transform: translateX(20px);
+  }
+  .switch:focus-visible{ outline: 2px solid var(--brass); outline-offset: 2px; }
 
   /* ---------- WHEEL ---------- */
   .wheel-outer{
     position: relative;
-    width: min(340px, 78vw);
+    width: min(340px, 88vw);
+    max-width: 340px;
     aspect-ratio: 1/1;
     margin: 0 auto;
+    touch-action: manipulation;
   }
   .wheel-ring{
     position:absolute; inset:0;
@@ -97,7 +145,7 @@
     font-family:'Fraunces', serif;
     font-style: italic;
     font-weight: 500;
-    font-size: clamp(2.6rem, 8vw, 3.4rem);
+    font-size: clamp(2.1rem, 11vw, 3.4rem);
     color: var(--brass);
     line-height:1;
     display:block;
@@ -113,17 +161,22 @@
   }
   .node{
     position:absolute;
-    width: 44px; height:44px;
+    width: clamp(36px, 11vw, 44px);
+    height: clamp(36px, 11vw, 44px);
     top:50%; left:50%;
-    margin: -22px 0 0 -22px;
+    margin-top: calc(clamp(36px, 11vw, 44px) / -2);
+    margin-left: calc(clamp(36px, 11vw, 44px) / -2);
     border-radius: var(--radius-node);
     border: 1px solid var(--hair);
     background: var(--panel);
     color: var(--ivory);
     font-family:'Space Mono', monospace;
-    font-size: 14px;
+    font-size: clamp(11px, 3vw, 14px);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    z-index: 2;
     transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
   }
   .node:hover{ border-color: var(--brass-dim); transform: scale(1.08); }
@@ -214,9 +267,17 @@
   }
 
   @media (max-width: 640px){
-    .row{ grid-template-columns: 1fr; gap:8px; }
+    .row{ grid-template-columns: 1fr; gap:6px; padding: 14px 0; }
     .fn{ flex-direction:row; align-items:baseline; gap:10px; }
-    .semis{ padding-top:0; }
+    .semis{ padding-top:0; order: -1; }
+    .root-line{ font-size: 0.95rem; }
+    .chip{ font-size: 11.5px; padding: 4px 8px; }
+    .results-head{ margin-bottom: 12px; }
+  }
+
+  @media (max-width: 380px){
+    .node{ font-size: 10px; }
+    h1{ font-size: 1.7rem; }
   }
 
   /* ---------- FOOTER / LEGEND ---------- */
@@ -239,10 +300,18 @@
     <h1>Buscador de<br>Fundamentales</h1>
     <p class="sub">Elegí una nota en la rueda cromática y la tabla arma automáticamente los acordes posibles según la función que esa nota cumple en cada uno.</p>
 
+    <div class="notation-toggle">
+      <span class="opt active" id="optFlat" data-mode="flat">♭ Bemol</span>
+      <button type="button" class="switch" id="notationSwitch" role="switch" aria-checked="false" aria-label="Cambiar entre notación con bemoles y con sostenidos">
+        <span class="knob"></span>
+      </button>
+      <span class="opt" id="optSharp" data-mode="sharp">♯ Sostenido</span>
+    </div>
+
     <div class="wheel-outer" id="wheel">
       <div class="wheel-ring"></div>
       <div class="wheel-center">
-        <span class="note" id="centerNote">F</span>
+        <span class="note" id="centerNote">C</span>
         <span class="label">nota elegida</span>
       </div>
       <!-- nodes injected by JS -->
@@ -259,46 +328,83 @@
     </section>
 
     <div class="legend">
-      <p><b>Convención de notas usada:</b> C, Db, D, Eb, E, F, F#, G, Ab, A, Bb, B — una sola grafía fija por nota, no cambia según el tipo de acorde.</p>
+      <p><b>Notación:</b> el switch de arriba cambia si la nota elegida se lee como bemol o como sostenido (C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B / C, C#, D, D#, E, F, F#, G, G#, A, A#, B).</p>
+      <p><b>Ortografía de la fundamental:</b> en las funciones diatónicas (Fundamental, 3m, 3M, 4J, 5d, 5J, 5a, 6M, 7d, 7m, 7M, 9M, 11J, 13M) la fundamental se calcula respetando la letra real del intervalo, así que puede aparecer con doble sostenido/bemol si la teoría lo exige (por ejemplo, la 3m de D# es B#, no C). En las tensiones alteradas de dominante (9m, 9a, 11a, 13m) se usa la grafía práctica habitual, ya que ahí la nota buscada es la propia tensión (b9, #9, #11, b13) y así se la nota en la práctica.</p>
       <p><b>Símbolos:</b> Δ7/Δ9/Δ11/Δ13 = mayor · ø7/ø9/ø11/ø13 = semidisminuido (m7b5) · ° = disminuido · °7 = disminuido7 · + = aumentado.</p>
       <p>Las funciones <b>Fundamental</b>, <b>5J</b> y <b>7m</b> no repiten las variantes alteradas de dominante (b9, #9, #11, b13): esas tensiones tienen su propia fila (9m, 9a, 11a, 13m) porque ahí es donde son la nota buscada.</p>
     </div>
   </div>
 
 <script>
-  const NOTES = ["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+  const NOTES_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+  const NOTES_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  let useSharp = false;
+  function notes(){ return useSharp ? NOTES_SHARP : NOTES_FLAT; }
+
+  // Letras naturales y sus semitonos, para calcular la ortografía correcta (real)
+  // de la fundamental según la distancia en letras (step) hacia la nota elegida.
+  const LETTER_ORDER = ['C','D','E','F','G','A','B'];
+  const NATURAL_SEMIS = [0,2,4,5,7,9,11];
+
+  function parseNote(str){
+    return { letter: str[0], acc: str.length > 1 ? (str[1] === '#' ? 1 : -1) : 0 };
+  }
+
+  // Dada la letra de la nota elegida, cuántas letras "step" hay que bajar, y el
+  // semitono real que debe dar la fundamental, devuelve la fundamental bien
+  // escrita (respetando la letra, aunque haga falta un doble sostenido/bemol).
+  function structuralRoot(selLetter, step, selPitch, semis){
+    const selLetterIdx = LETTER_ORDER.indexOf(selLetter);
+    const rootLetterIdx = ((selLetterIdx - step) % 7 + 7) % 7;
+    const rootLetter = LETTER_ORDER[rootLetterIdx];
+    const rootNatural = NATURAL_SEMIS[rootLetterIdx];
+    const targetPitch = ((selPitch - semis) % 12 + 12) % 12;
+    let acc = targetPitch - rootNatural;
+    while (acc > 6) acc -= 12;
+    while (acc < -6) acc += 12;
+    const accStr = acc > 0 ? '#'.repeat(acc) : acc < 0 ? 'b'.repeat(-acc) : '';
+    return rootLetter + accStr;
+  }
 
   // semitones = distancia desde la fundamental del acorde hasta la nota elegida
+  // step = distancia en letras (0=unísono,1=2da,2=3ra,3=4ta,4=5ta,5=6ta,6=7ma) para calcular
+  //        la fundamental con la letra correcta (ortografía enarmónica real).
+  // Las funciones de tensión alterada sobre dominante (9m,9a,11a,13m) no llevan 'step':
+  // esas se muestran con la grafía práctica simple, como es la convención habitual al notar
+  // tensiones alteradas (b9,#9,#11,b13) en un acorde de dominante.
   const FUNCTIONS = [
-    { tag:"Fundamental", name:"Unísono",            semis:0,  suf:["","m","°","+","5","sus2","sus4","6","m6","6/9","m6/9","Δ7","7","m7","mΔ7","ø7","°7","Δ7(#5)","7(#5)","7sus4","m(add9)","Δ9","9","m9","mΔ9","ø9","11","m11","13","Δ13","m13"] },
-    { tag:"3m",          name:"Tercera menor",        semis:3,  suf:["m","°","m6","m6/9","mΔ7","m7","ø7","°7","m9","mΔ9","ø9","m11","mΔ11","ø11","m13","mΔ13","m(add9)"] },
-    { tag:"3M",          name:"Tercera mayor",        semis:4,  suf:["","+","6","6/9","Δ7","7","Δ7(#5)","7(#5)","Δ9","9","13","Δ13","add9"] },
-    { tag:"4J",          name:"Cuarta justa",         semis:5,  suf:["sus4","7sus4","9sus4","13sus4"] },
-    { tag:"5d",          name:"Quinta disminuida",    semis:6,  suf:["°","ø7","°7","7(b5)","ø9"] },
-    { tag:"5J",          name:"Quinta justa",         semis:7,  suf:["","m","5","sus2","sus4","6","m6","6/9","m6/9","Δ7","7","m7","mΔ7","Δ9","9","m9","mΔ9","11","m11","13","Δ13","m13","add9","m(add9)","7sus4","9sus4","13sus4"] },
-    { tag:"5a",          name:"Quinta aumentada",     semis:8,  suf:["+","Δ7(#5)","7(#5)","9(#5)"] },
-    { tag:"6M",          name:"Sexta mayor",          semis:9,  suf:["6","m6","6/9","m6/9"] },
-    { tag:"7d",          name:"Séptima disminuida",   semis:9,  suf:["°7"] },
-    { tag:"7m",          name:"Séptima menor",        semis:10, suf:["7","m7","ø7","9","m9","ø9","11","m11","ø11","13","m13","7sus4","9sus4","13sus4"] },
-    { tag:"7M",          name:"Séptima mayor",        semis:11, suf:["Δ7","mΔ7","Δ9","mΔ9","Δ7(#11)","Δ7(#5)","Δ13"] },
+    { tag:"Fundamental", name:"Unísono",            semis:0,  step:0, suf:["","m","°","+","5","sus2","sus4","6","m6","6/9","m6/9","Δ7","7","m7","mΔ7","ø7","°7","Δ7(#5)","7(#5)","7sus4","m(add9)","Δ9","9","m9","mΔ9","ø9","11","m11","13","Δ13","m13"] },
+    { tag:"3m",          name:"Tercera menor",        semis:3,  step:2, suf:["m","°","m6","m6/9","mΔ7","m7","ø7","°7","m9","mΔ9","ø9","m11","mΔ11","ø11","m13","mΔ13","m(add9)"] },
+    { tag:"3M",          name:"Tercera mayor",        semis:4,  step:2, suf:["","+","6","6/9","Δ7","7","Δ7(#5)","7(#5)","Δ9","9","13","Δ13","add9"] },
+    { tag:"4J",          name:"Cuarta justa",         semis:5,  step:3, suf:["sus4","7sus4","9sus4","13sus4"] },
+    { tag:"5d",          name:"Quinta disminuida",    semis:6,  step:4, suf:["°","ø7","°7","7(b5)","ø9"] },
+    { tag:"5J",          name:"Quinta justa",         semis:7,  step:4, suf:["","m","5","sus2","sus4","6","m6","6/9","m6/9","Δ7","7","m7","mΔ7","Δ9","9","m9","mΔ9","11","m11","13","Δ13","m13","add9","m(add9)","7sus4","9sus4","13sus4"] },
+    { tag:"5a",          name:"Quinta aumentada",     semis:8,  step:4, suf:["+","Δ7(#5)","7(#5)","9(#5)"] },
+    { tag:"6M",          name:"Sexta mayor",          semis:9,  step:5, suf:["6","m6","6/9","m6/9"] },
+    { tag:"7d",          name:"Séptima disminuida",   semis:9,  step:6, suf:["°7"] },
+    { tag:"7m",          name:"Séptima menor",        semis:10, step:6, suf:["7","m7","ø7","9","m9","ø9","11","m11","ø11","13","m13","7sus4","9sus4","13sus4"] },
+    { tag:"7M",          name:"Séptima mayor",        semis:11, step:6, suf:["Δ7","mΔ7","Δ9","mΔ9","Δ7(#11)","Δ7(#5)","Δ13"] },
     { tag:"9m",          name:"Novena menor",         semis:1,  suf:["7(b9)","7(b9,#5)","7(b9,b13)","13(b9)","m7(b9)"] },
-    { tag:"9M",          name:"Novena mayor",         semis:2,  suf:["9","Δ9","m9","mΔ9","ø9","add9","m(add9)","6/9","m6/9"] },
+    { tag:"9M",          name:"Novena mayor",         semis:2,  step:1, suf:["9","Δ9","m9","mΔ9","ø9","add9","m(add9)","6/9","m6/9"] },
     { tag:"9a",          name:"Novena aumentada",     semis:3,  suf:["7(#9)","7(#9,#5)","7(#9,b13)","7(#9,#11)","13(#9)"] },
-    { tag:"11J",         name:"Oncena justa",         semis:5,  suf:["11","m11","mΔ11","ø11","m(add11)"] },
+    { tag:"11J",         name:"Oncena justa",         semis:5,  step:3, suf:["11","m11","mΔ11","ø11","m(add11)"] },
     { tag:"11a",         name:"Oncena aumentada",     semis:6,  suf:["Δ7(#11)","7(#11)","Δ9(#11)","9(#11)","Δ13(#11)","13(#11)"] },
     { tag:"13m",         name:"Trecena menor",        semis:8,  suf:["7(b13)","7(b9,b13)","7(#9,b13)","9(b13)"] },
-    { tag:"13M",         name:"Trecena mayor",        semis:9,  suf:["13","Δ13","m13","mΔ13","ø13"] },
+    { tag:"13M",         name:"Trecena mayor",        semis:9,  step:5, suf:["13","Δ13","m13","mΔ13","ø13"] },
   ];
 
-  let selected = 5; // F, como en la hoja original
+  let selected = 0; // C, nota por defecto
 
   const wheel = document.getElementById('wheel');
   const centerNote = document.getElementById('centerNote');
   const rowsEl = document.getElementById('rows');
   const countEl = document.getElementById('resultCount');
+  const notationSwitch = document.getElementById('notationSwitch');
+  const optFlat = document.getElementById('optFlat');
+  const optSharp = document.getElementById('optSharp');
 
-  // construir la rueda
-  NOTES.forEach((note, i) => {
+  // construir la rueda (las posiciones son fijas; solo cambia el texto según notación)
+  notes().forEach((note, i) => {
     const angle = (i * 30) - 90; // 12 posiciones, empieza arriba
     const rad = angle * Math.PI / 180;
     const radius = 42; // % del contenedor
@@ -306,6 +412,7 @@
     const y = 50 + radius * Math.sin(rad);
 
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'node';
     btn.textContent = note;
     btn.style.left = x + '%';
@@ -314,25 +421,51 @@
     btn.setAttribute('aria-label', 'Elegir nota ' + note);
     btn.dataset.index = i;
     btn.addEventListener('click', () => selectNote(i));
+    btn.addEventListener('touchend', (e) => { e.preventDefault(); selectNote(i); }, { passive:false });
     wheel.appendChild(btn);
   });
+
+  notationSwitch.addEventListener('click', toggleNotation);
+
+  function toggleNotation(){
+    useSharp = !useSharp;
+    notationSwitch.setAttribute('aria-checked', String(useSharp));
+    optFlat.classList.toggle('active', !useSharp);
+    optSharp.classList.toggle('active', useSharp);
+    document.querySelectorAll('.node').forEach(n => {
+      const i = Number(n.dataset.index);
+      const label = notes()[i];
+      n.textContent = label;
+      n.setAttribute('aria-label', 'Elegir nota ' + label);
+    });
+    centerNote.textContent = notes()[selected];
+    render();
+  }
 
   function selectNote(i){
     selected = i;
     document.querySelectorAll('.node').forEach(n => {
       n.setAttribute('aria-pressed', Number(n.dataset.index) === i ? 'true' : 'false');
     });
-    centerNote.textContent = NOTES[i];
+    centerNote.textContent = notes()[i];
     render();
   }
 
   function render(){
     rowsEl.innerHTML = '';
     let totalChords = 0;
+    const currentNotes = notes();
+    const selStr = currentNotes[selected];
+    const selLetter = parseNote(selStr).letter;
 
     FUNCTIONS.forEach(fn => {
-      const rootIdx = ((selected - fn.semis) % 12 + 12) % 12;
-      const rootNote = NOTES[rootIdx];
+      let rootNote;
+      if (fn.step !== undefined){
+        rootNote = structuralRoot(selLetter, fn.step, selected, fn.semis);
+      } else {
+        const rootIdx = ((selected - fn.semis) % 12 + 12) % 12;
+        rootNote = currentNotes[rootIdx];
+      }
       const chords = fn.suf.map(s => rootNote + s);
       totalChords += chords.length;
 
